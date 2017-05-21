@@ -1,10 +1,8 @@
 package streams
 
 import org.scalatest.FunSuite
-
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-
 import Bloxorz._
 
 @RunWith(classOf[JUnitRunner])
@@ -28,6 +26,19 @@ class BloxorzSuite extends FunSuite {
     }
   }
 
+  trait Level0 extends SolutionChecker {
+    /* terrain for level 1*/
+    val level =
+      """---
+        |ooo
+        |oS-
+        |-oo
+        |-oo
+        |oTo
+        |o-o
+        |---""".stripMargin
+  }
+
   trait Level1 extends SolutionChecker {
       /* terrain for level 1*/
 
@@ -40,6 +51,17 @@ class BloxorzSuite extends FunSuite {
       |------ooo-""".stripMargin
 
     val optsolution = List(Right, Right, Down, Right, Right, Right, Down)
+  }
+
+  trait LevelNoSolution extends SolutionChecker {
+    /* terrain for level 1*/
+    val level =
+      """---
+        |---
+        |oS-
+        |-oo
+        |oTo
+        |---""".stripMargin
   }
 
 
@@ -64,9 +86,57 @@ class BloxorzSuite extends FunSuite {
     }
   }
 
+  test("list of neighbors") {
+    new Level1 {
+      val block24 = Block(Pos(2,4),Pos(2,4))
+      assert(block24.neighbors == List(
+        (Block(Pos(2,2),Pos(2,3)),Left),
+        (Block(Pos(2,5),Pos(2,6)),Right),
+        (Block(Pos(0,4),Pos(1,4)),Up),
+        (Block(Pos(3,4),Pos(4,4)),Down)
+      ), "neighbors of centered standing block ((2,4),(2,4))")
+    }
+  }
+
+  test("list of legal neighbors") {
+    new Level1 {
+      val block24 = Block(Pos(2,4),Pos(2,4))
+      assert(block24.legalNeighbors == List(
+        (Block(Pos(2,2),Pos(2,3)),Left),
+        (Block(Pos(2,5),Pos(2,6)),Right)
+      ), "neighbors of centered standing block ((2,4),(2,4))")
+    }
+  }
+
+  test("neighbors with history") {
+    new Level1 {
+      val iter0 = neighborsWithHistory(Block(Pos(1,1),Pos(1,1)), List(Left,Up))
+      assert(iter0.toSet == Set(
+        (Block(Pos(1,2),Pos(1,3)), List(Right,Left,Up)),
+        (Block(Pos(2,1),Pos(3,1)), List(Down,Left,Up))
+      ))
+    }
+  }
+
+  test("new neighbors only") {
+    new Level1 {
+      val iter0 = neighborsWithHistory(Block(Pos(1,1),Pos(1,1)), List(Left,Up))
+      val iter0_onlyNew = newNeighborsOnly(iter0,Set(Block(Pos(1,2),Pos(1,3)),Block(Pos(2,2),Pos(2,2))))
+      assert(iter0_onlyNew.toSet == Set(
+        (Block(Pos(2,1),Pos(3,1)), List(Down,Left,Up))
+      ))
+    }
+  }
+
+  test("printing all paths") {
+    new Level0 {
+      println(pathsFromStart.take(100).toList)
+    }
+  }
 
 	test("optimal solution for level 1") {
     new Level1 {
+      print(solution)
       assert(solve(solution) == Block(goal, goal))
     }
   }
@@ -75,6 +145,12 @@ class BloxorzSuite extends FunSuite {
 	test("optimal solution length for level 1") {
     new Level1 {
       assert(solution.length == optsolution.length)
+    }
+  }
+
+  test("corner case of no solution") {
+    new LevelNoSolution {
+      assert(solution.length == 0)
     }
   }
 
