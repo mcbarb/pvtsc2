@@ -1,3 +1,4 @@
 course := "progfun2"
 //assignment := "example"
-assignment := "streams"
+//assignment := "streams"
+assignment := "quickcheck"
